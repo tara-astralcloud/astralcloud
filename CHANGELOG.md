@@ -11,6 +11,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
+## [0.1.7] - 2026-05-28
+
+### Changed
+
+- `infra/terraform/`: switch SSH auth from private key to password, passed via `TF_VAR_ssh_password` env var (never stored in any committed file)
+  - `modules/k3s-node/`: `ssh_private_key_path` removed; `ssh_password` added (sensitive)
+  - Connection blocks updated to `password` auth
+  - `data.external` node token read uses `sshpass -e` + `sudo cat` (token file is root-only)
+  - New `null_resource.kubeconfig` runs `local-exec` to scp + patch kubeconfig automatically — no manual steps needed after `terraform apply`
+  - `outputs.tf`: replaced manual `kubeconfig_command` output with `verify_cluster`
+  - `terraform.tfvars.example`: removed `ssh_private_key_path`, added `TF_VAR_ssh_password` usage comment
+
 ## [0.1.6] - 2026-05-28
 
 ### Added

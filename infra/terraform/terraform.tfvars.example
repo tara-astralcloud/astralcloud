@@ -1,5 +1,8 @@
-server_node_ip       = "192.168.1.100"  # Replace with your Pi's IP
-agent_node_ips       = []               # Add Pi IPs here to scale to multi-node
-ssh_user             = "pi"
-ssh_private_key_path = "~/.ssh/id_rsa"
-k3s_version          = "v1.32.3+k3s1"
+server_node_ip = "192.168.1.100"  # Replace with your Pi's IP
+agent_node_ips = []               # Add Pi IPs here to scale to multi-node
+ssh_user       = "pi"
+k3s_version    = "v1.32.3+k3s1"
+
+# Do NOT add ssh_password here — pass it at apply time:
+#   export TF_VAR_ssh_password='yourpassword'
+#   terraform apply

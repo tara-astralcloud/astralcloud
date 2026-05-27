@@ -9,9 +9,10 @@ variable "ssh_user" {
   default     = "pi"
 }
 
-variable "ssh_private_key_path" {
-  description = "Path to SSH private key"
+variable "ssh_password" {
+  description = "SSH password — injected from TF_VAR_ssh_password, never stored in files"
   type        = string
+  sensitive   = true
 }
 
 variable "k3s_version" {

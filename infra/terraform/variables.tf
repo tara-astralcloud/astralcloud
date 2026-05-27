@@ -36,7 +36,8 @@ variable "ssh_user" {
   default     = "pi"
 }
 
-variable "ssh_private_key_path" {
-  description = "Path to the SSH private key used to connect to Pi nodes"
+variable "ssh_password" {
+  description = "SSH password for Pi nodes — pass via TF_VAR_ssh_password env var, never in .tfvars"
   type        = string
+  sensitive   = true
 }
