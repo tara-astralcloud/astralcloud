@@ -40,15 +40,19 @@ Examples:
 
 ## Operations
 
-### Quick Commit & Push
+### Quick Commit & Push (always via PR)
+
+**Never push directly to `main`.** All changes go through a PR.
 
 When asked to "commit and push" or "save changes":
 
-1. **Invoke `/version-manage`** first — ask the user if the changes warrant a version bump (patch/minor/major) and update `VERSION` and `CHANGELOG.md` accordingly before committing
-2. Run `git status` to show what will be committed
-3. Stage relevant files (`git add <files>` — never `git add .` blindly)
-4. Commit with a conventional message
-5. Push to the current branch (`git push` or `git push -u origin <branch>` for new branches)
+1. **Check current branch** — if on `main`, create a new branch first using the appropriate naming convention before doing anything else
+2. **Invoke `/version-manage`** — ask if the changes warrant a version bump (patch/minor/major) and update `VERSION` and `CHANGELOG.md` accordingly
+3. Run `git status` to show what will be committed
+4. Stage relevant files (`git add <files>` — never `git add .` blindly)
+5. Commit with a conventional message
+6. Push the branch: `git push -u origin <branch>`
+7. **Open a PR automatically** (see Full PR Workflow below) and return the PR URL to the user
 
 ### Branch Management
 
