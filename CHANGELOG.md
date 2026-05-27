@@ -11,6 +11,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
+## [0.1.6] - 2026-05-28
+
+### Added
+
+- `infra/terraform/`: Terraform module to provision k3s cluster on Raspberry Pi (ARM64)
+  - Root module with server + multi-node agent support via `for_each`
+  - `modules/k3s-node/`: reusable module for server and agent provisioning via SSH remote-exec
+  - Input validation on `k3s_version`, `server_node_ip`, and `agent_node_ips`
+  - Safe node token retrieval using `data.external` + python3 JSON encoding
+  - Agent install uses `K3S_TOKEN_FILE` to avoid token exposure in `/proc`/`ps`
+- `.gitignore`: Terraform entries (`.terraform/`, `*.tfvars`, `tfplan`, etc.)
+
 ## [0.1.5] - 2026-05-28
 
 ### Added

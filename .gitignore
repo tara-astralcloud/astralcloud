@@ -1,2 +1,11 @@
 .claude/settings.local.json
 .claude/.mcp.json
+
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+*.tfvars
+!terraform.tfvars.example
+tfplan
+crash.log
