@@ -11,6 +11,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
+## [0.1.5] - 2026-05-28
+
+### Added
+
+- `terraform` skill (`.claude/skills/terraform.md`): deep knowledge on Terraform with AstralCloud-specific patterns, security rules, ARM64/Pi considerations, and review checklist
+- `k3s` skill (`.claude/skills/k3s.md`): deep knowledge on k3s, Helm, MetalLB, ingress-nginx, Longhorn, and day-2 operations
+
+### Changed
+
+- `dev-practice` skill: full rewrite enforcing TDD (Red→Green→Refactor), code quality standards (Go + Next.js), performance and scalability requirements, and pre-PR checklist
+- CLAUDE.md: added Lessons Learned section recording past mistakes by area so they are never repeated
+- Removed duplicate terraform and k3s command files — these are skills, not commands
+
 ## [0.1.4] - 2026-05-28
 
 ### Added
