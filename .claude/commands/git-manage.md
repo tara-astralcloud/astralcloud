@@ -44,10 +44,11 @@ Examples:
 
 When asked to "commit and push" or "save changes":
 
-1. Run `git status` to show what will be committed
-2. Stage relevant files (`git add <files>` — never `git add .` blindly)
-3. Commit with a conventional message
-4. Push to the current branch (`git push` or `git push -u origin <branch>` for new branches)
+1. **Invoke `/version-manage`** first — ask the user if the changes warrant a version bump (patch/minor/major) and update `VERSION` and `CHANGELOG.md` accordingly before committing
+2. Run `git status` to show what will be committed
+3. Stage relevant files (`git add <files>` — never `git add .` blindly)
+4. Commit with a conventional message
+5. Push to the current branch (`git push` or `git push -u origin <branch>` for new branches)
 
 ### Branch Management
 
