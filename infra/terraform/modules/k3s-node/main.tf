@@ -1,0 +1,72 @@
+locals {
+  is_server = var.role == "server"
+}
+
+# Provision the k3s server (control-plane) node
+resource "null_resource" "k3s_server" {
+  count = local.is_server ? 1 : 0
+
+  # Changing node_ip or k3s_version will trigger a re-provision
+  triggers = {
+    node_ip     = var.node_ip
+    k3s_version = var.k3s_version
+  }
+
+  connection {
+    type        = "ssh"
+    host        = var.node_ip
+    user        = var.ssh_user
+    private_key = file(var.ssh_private_key_path)
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      # Install k3s server; Traefik is disabled — ingress-nginx will be added in a later PR
+      # --write-kubeconfig-mode 644 allows the pi user to scp the kubeconfig without sudo
+      "curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION='${var.k3s_version}' sh -s - server --disable traefik --write-kubeconfig-mode 644",
+      # Wait up to 3 minutes for the node to reach Ready state before continuing
+      "n=0; until sudo k3s kubectl get nodes 2>/dev/null | grep -q ' Ready'; do sleep 5; n=$((n+1)); [ $n -lt 36 ] || { echo 'k3s did not become ready after 3 minutes' >&2; exit 1; }; done",
+    ]
+  }
+}
+
+# Read the node token so agent nodes can join the cluster.
+# python3 (always present on Pi/Ubuntu) safely encodes the token as JSON,
+# avoiding issues with special characters in printf format strings.
+data "external" "node_token" {
+  count = local.is_server ? 1 : 0
+
+  depends_on = [null_resource.k3s_server]
+
+  program = [
+    "bash", "-c",
+    "ssh -o StrictHostKeyChecking=accept-new -o BatchMode=yes -i '${var.ssh_private_key_path}' '${var.ssh_user}@${var.node_ip}' 'python3 -c \"import json,pathlib; print(json.dumps({\\\"token\\\": pathlib.Path(\\\"/var/lib/rancher/k3s/server/node-token\\\").read_text().strip()}))\"'"
+  ]
+}
+
+# Provision an agent (worker) node and join it to the cluster
+resource "null_resource" "k3s_agent" {
+  count = local.is_server ? 0 : 1
+
+  triggers = {
+    node_ip     = var.node_ip
+    k3s_version = var.k3s_version
+    server_ip   = var.server_ip
+  }
+
+  connection {
+    type        = "ssh"
+    host        = var.node_ip
+    user        = var.ssh_user
+    private_key = file(var.ssh_private_key_path)
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      # Write the token to a restricted file to avoid exposing it in /proc or ps output
+      "printf '%s' '${var.server_token}' | sudo tee /var/lib/rancher/k3s-install-token > /dev/null && sudo chmod 600 /var/lib/rancher/k3s-install-token",
+      "curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION='${var.k3s_version}' K3S_URL='https://${var.server_ip}:6443' K3S_TOKEN_FILE=/var/lib/rancher/k3s-install-token sh -",
+      "sudo rm -f /var/lib/rancher/k3s-install-token",
+    ]
+  }
+}
