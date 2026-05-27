@@ -11,6 +11,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
+## [0.1.2] - 2026-05-28
+
+### Added
+
+- Root README.md with platform overview, setup, and release docs
+
 ## [0.1.1] - 2026-05-28
 
 ### Added
