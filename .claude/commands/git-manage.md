@@ -48,11 +48,12 @@ When asked to "commit and push" or "save changes":
 
 1. **Check current branch** — if on `main`, create a new branch first using the appropriate naming convention before doing anything else
 2. **Invoke `/version-manage`** — ask if the changes warrant a version bump (patch/minor/major) and update `VERSION` and `CHANGELOG.md` accordingly
-3. Run `git status` to show what will be committed
-4. Stage relevant files (`git add <files>` — never `git add .` blindly)
-5. Commit with a conventional message
-6. Push the branch: `git push -u origin <branch>`
-7. **Open a PR automatically** (see Full PR Workflow below) and return the PR URL to the user
+3. **Invoke `/code-review`** — run a full review of the staged/unstaged changes, including the reviewer agent second opinion. **Wait for explicit user approval before proceeding.** If the user requests fixes, apply them and re-review before continuing.
+4. Run `git status` to show what will be committed
+5. Stage relevant files (`git add <files>` — never `git add .` blindly)
+6. Commit with a conventional message
+7. Push the branch: `git push -u origin <branch>`
+8. **Open a PR automatically** (see Full PR Workflow below) and return the PR URL to the user
 
 ### Branch Management
 
