@@ -77,8 +77,8 @@ terraform init
 terraform plan
 terraform apply
 
-helm install astralcloud ./helm/platform -n astralcloud
-helm upgrade astralcloud ./helm/platform -n astralcloud
+helm install astralcloud ./infra/helm/platform -n astralcloud
+helm upgrade astralcloud ./infra/helm/platform -n astralcloud
 ```
 
 ## App Integration Contract

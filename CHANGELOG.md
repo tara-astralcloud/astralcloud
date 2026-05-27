@@ -11,6 +11,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
+## [0.1.4] - 2026-05-28
+
+### Added
+
+- Root README.md with platform overview, development setup, and release docs
+- `.githooks/commit-msg` and `.githooks/pre-push` hooks committed to repo
+
+### Changed
+
+- CLAUDE.md: fix Helm path to `./infra/helm/platform`
+
 ## [0.1.3] - 2026-05-28
 
 ### Added
