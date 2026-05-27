@@ -11,6 +11,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
+## [0.1.1] - 2026-05-28
+
+### Added
+
+- GitHub Actions workflows: release-tag on merge to main, release on tag push
+- Claude Code skills: github-config, dev-practice
+
+### Changed
+
+- git-manage skill: enforce PR-only workflow, invoke version-manage before commit
+- Prettier hook updated to use safe read pattern for file paths with spaces
+
 ## [0.1.0] - 2026-05-27
 
 ### Added

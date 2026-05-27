@@ -6,9 +6,7 @@
       "Bash(git -C /Users/I757692/Documents/workspace/personal/tara config user.email \"ananthupmadhu@gmail.com\")",
       "Bash(git -C /Users/I757692/Documents/workspace/personal/tara config user.email)"
     ],
-    "deny": [
-      "Bash(rm -rf *)"
-    ]
+    "deny": ["Bash(rm -rf *)"]
   },
   "hooks": {
     "PostToolUse": [
@@ -17,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_input.file_path' | xargs npx prettier --write"
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath' | { read -r f; npx prettier --write \"$f\"; } 2>/dev/null || true"
           }
         ]
       }
