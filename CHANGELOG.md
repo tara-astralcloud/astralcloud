@@ -11,6 +11,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
+## [0.1.3] - 2026-05-28
+
+### Added
+
+- code-review skill: review code with agent second opinion and user approval gate before commit
+
+### Changed
+
+- git-manage skill: invoke `/code-review` and require user approval before every commit
+
 ## [0.1.1] - 2026-05-28
 
 ### Added
