@@ -1,0 +1,30 @@
+image:
+  repository: ghcr.io/tara-astralcloud/dashboard
+  tag: "0.2.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+env:
+  AUTH_KEYCLOAK_ISSUER: "http://keycloak-keycloakx-http.keycloak.svc.cluster.local/auth/realms/astralcloud"
+  NEXTAUTH_URL: "http://dashboard.astralcloud.local"
+
+# Secret name containing: AUTH_SECRET, AUTH_KEYCLOAK_ID, AUTH_KEYCLOAK_SECRET
+envFromSecret: dashboard-secret
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  host: dashboard.astralcloud.local
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi

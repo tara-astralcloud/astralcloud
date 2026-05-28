@@ -4,6 +4,7 @@ locals {
   ingress_nginx_values   = "${var.helm_values_dir}/ingress-nginx/values.yaml"
   keycloak_values_file   = "${var.helm_values_dir}/keycloak/values.yaml"
   keycloak_postgres_file = "${var.helm_values_dir}/keycloak/postgres.yaml"
+  dashboard_chart_dir    = "${var.helm_values_dir}/dashboard"
 }
 
 # ── 1. MetalLB ───────────────────────────────────────────────────────────────
@@ -97,6 +98,44 @@ resource "null_resource" "keycloak" {
         --wait \
         --timeout 10m \
         -f ${local.keycloak_values_file}
+    EOT
+  }
+}
+
+# ── 4. Dashboard ─────────────────────────────────────────────────────────────
+# Next.js app — deployed from local Helm chart at infra/helm/dashboard/.
+# OIDC client secret and Auth.js secret injected via environment block.
+# IMPORTANT: Do NOT add dashboard_client_secret or dashboard_auth_secret to
+# triggers — trigger values are stored as plaintext in terraform.tfstate.
+
+resource "null_resource" "dashboard" {
+  triggers   = { force = var.force_reprovision }
+  depends_on = [null_resource.keycloak]
+
+  provisioner "local-exec" {
+    interpreter = ["bash", "-c"]
+    environment = {
+      DASHBOARD_CLIENT_SECRET = var.dashboard_client_secret
+      DASHBOARD_AUTH_SECRET   = var.dashboard_auth_secret
+    }
+    command = <<-EOT
+      set -euo pipefail
+
+      # Create namespace and dashboard secret
+      kubectl create namespace astralcloud --dry-run=client -o yaml | kubectl apply -f -
+      kubectl create secret generic dashboard-secret \
+        --namespace astralcloud \
+        --from-literal=AUTH_SECRET="$DASHBOARD_AUTH_SECRET" \
+        --from-literal=AUTH_KEYCLOAK_ID="dashboard" \
+        --from-literal=AUTH_KEYCLOAK_SECRET="$DASHBOARD_CLIENT_SECRET" \
+        --dry-run=client -o yaml | kubectl apply -f -
+
+      # Deploy Dashboard via local Helm chart
+      helm upgrade --install dashboard ${local.dashboard_chart_dir} \
+        --namespace astralcloud \
+        --create-namespace \
+        --wait \
+        --timeout 5m
     EOT
   }
 }

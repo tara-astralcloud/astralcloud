@@ -11,7 +11,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
-## [0.1.8] - 2026-05-28
+## [0.2.0] - 2026-05-28
+
+### Added
+
+- `dashboard/`: Next.js 14 App Router dashboard with Keycloak OIDC via Auth.js v5
+  - iCloud-style home screen with live clock widget, app grid, and user menu (sign out)
+  - Route protection via `src/middleware.ts` — all routes require session except `/login`, `/api/auth`, `/api/health`
+  - `/api/health` endpoint for Kubernetes liveness/readiness probes
+  - 3-stage ARM64 Dockerfile (`linux/arm64`, `output: standalone`, `node:20-alpine`)
+  - `.env.example` for local development setup
+- `infra/helm/dashboard/`: Local Helm chart for dashboard deployment to k3s
+  - `deployment.yaml`, `service.yaml`, `ingress.yaml` with resource limits and health probes
+  - Secrets injected from `dashboard-secret` k8s Secret (never in values.yaml)
+- `infra/terraform/modules/platform/`: Added `null_resource.dashboard` (4th platform component)
+  - Creates `astralcloud` namespace and `dashboard-secret` from env vars
+  - Deploys dashboard Helm chart; depends on Keycloak being up
+- `infra/terraform/variables.tf`: Added `dashboard_client_secret` and `dashboard_auth_secret` (both sensitive)
 
 ### Added
 

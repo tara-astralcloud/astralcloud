@@ -1,0 +1,6 @@
+apiVersion: v2
+name: dashboard
+description: AstralCloud Dashboard — Next.js frontend with Keycloak OIDC
+type: application
+version: 0.2.0
+appVersion: "0.2.0"

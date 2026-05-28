@@ -24,3 +24,15 @@ variable "helm_values_dir" {
   description = "Absolute path to the infra/helm/ directory containing per-chart values.yaml files"
   type        = string
 }
+
+variable "dashboard_client_secret" {
+  description = "Keycloak OIDC client secret for the dashboard"
+  type        = string
+  sensitive   = true
+}
+
+variable "dashboard_auth_secret" {
+  description = "Auth.js secret for JWT signing"
+  type        = string
+  sensitive   = true
+}

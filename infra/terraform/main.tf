@@ -29,6 +29,8 @@ module "platform" {
   keycloak_admin_password = var.keycloak_admin_password
   force_reprovision       = var.platform_force_reprovision
   helm_values_dir         = "${path.module}/../helm"
+  dashboard_client_secret = var.dashboard_client_secret
+  dashboard_auth_secret   = var.dashboard_auth_secret
 
   depends_on = [module.server]
 }
