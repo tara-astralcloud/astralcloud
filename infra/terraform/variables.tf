@@ -41,3 +41,26 @@ variable "ssh_password" {
   type        = string
   sensitive   = true
 }
+
+variable "keycloak_admin_password" {
+  description = "Keycloak admin password — pass via TF_VAR_keycloak_admin_password, never in .tfvars"
+  type        = string
+  sensitive   = true
+}
+
+variable "metallb_ip_range" {
+  description = "MetalLB L2 IP address pool range (e.g. 192.168.0.200-192.168.0.220)"
+  type        = string
+  default     = "192.168.0.200-192.168.0.220"
+
+  validation {
+    condition     = can(regex("^(\\d{1,3}\\.){3}\\d{1,3}-(\\d{1,3}\\.){3}\\d{1,3}$", var.metallb_ip_range))
+    error_message = "metallb_ip_range must be in the form A.B.C.D-A.B.C.E"
+  }
+}
+
+variable "platform_force_reprovision" {
+  description = "Increment to force platform Helm resources to re-run after a values change"
+  type        = string
+  default     = "0"
+}

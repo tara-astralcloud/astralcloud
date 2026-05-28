@@ -11,6 +11,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
+## [0.1.8] - 2026-05-28
+
+### Added
+
+- `infra/terraform/modules/platform/`: Terraform module that installs MetalLB, ingress-nginx, and Keycloak via Helm as `local-exec` provisioners — single `terraform apply` provisions cluster + all platform services
+  - MetalLB 0.14.9 (L2 mode, IP pool `192.168.0.200–192.168.0.220`)
+  - ingress-nginx 4.10.1 (LoadBalancer via MetalLB, default ingress class)
+  - Keycloak 26.6.2 via `codecentric/keycloakx` 7.2.0 (uses `quay.io/keycloak/keycloak`, separate `postgres:16-alpine` StatefulSet, `keycloak.astralcloud.local`)
+- `infra/helm/`: Helm values files for MetalLB, ingress-nginx, and Keycloak
+  - `infra/helm/metallb/crds/ip-address-pool.yaml`: IPAddressPool + L2Advertisement CRDs
+  - `infra/helm/keycloak/postgres.yaml`: standalone PostgreSQL StatefulSet + Service + PVC
+- `infra/terraform/variables.tf`: added `keycloak_admin_password` (sensitive), `metallb_ip_range`, `platform_force_reprovision`
+- `infra/terraform/outputs.tf`: added `ingress_nginx_ip` and `keycloak_url` outputs
+
+### Changed
+
+- `infra/terraform/modules/k3s-node/main.tf`: fixed `data.external` node token read to use `sudo -S` (password piped via stdin) — `sudo -n` was unreliable without a cached TTY session
+- `CLAUDE.md`: updated Repository Structure, Infrastructure commands, and Lessons Learned (Bitnami Docker Hub removal, keycloakx duplicate env vars, null_resource rollout failure handling)
+
 ## [0.1.7] - 2026-05-28
 
 ### Changed

@@ -20,3 +20,15 @@ module "agents" {
   server_ip    = var.server_node_ip
   server_token = module.server.node_token
 }
+
+module "platform" {
+  source = "./modules/platform"
+
+  server_node_ip          = var.server_node_ip
+  metallb_ip_range        = var.metallb_ip_range
+  keycloak_admin_password = var.keycloak_admin_password
+  force_reprovision       = var.platform_force_reprovision
+  helm_values_dir         = "${path.module}/../helm"
+
+  depends_on = [module.server]
+}
