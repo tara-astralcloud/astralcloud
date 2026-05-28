@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 
 export default function UserMenu({
   name,
@@ -57,7 +58,8 @@ export default function UserMenu({
           </div>
 
           <div className="py-1">
-            <button
+            <Link
+              href="/about"
               onClick={() => setOpen(false)}
               className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
             >
@@ -75,7 +77,7 @@ export default function UserMenu({
                 />
               </svg>
               About
-            </button>
+            </Link>
 
             <button
               onClick={handleSignOut}
