@@ -1,8 +1,15 @@
-server_node_ip = "192.168.1.100"  # Replace with your Pi's IP
-agent_node_ips = []               # Add Pi IPs here to scale to multi-node
-ssh_user       = "pi"
-k3s_version    = "v1.32.3+k3s1"
+server_node_ip             = "192.168.1.100" # Replace with your Pi's IP
+agent_node_ips             = []              # Add Pi IPs here to scale to multi-node
+ssh_user                   = "pi"
+k3s_version                = "v1.32.3+k3s1"
+metallb_ip_range           = "192.168.0.200-192.168.0.220"
+platform_force_reprovision = "0"
 
-# Do NOT add ssh_password here — pass it at apply time:
+# Secrets — pass via env var only, never add here:
 #   export TF_VAR_ssh_password='yourpassword'
+#   export TF_VAR_keycloak_admin_password='yourkeycloakpassword'
+#   terraform apply
+#
+# To re-run helm installs after a values change:
+#   export TF_VAR_platform_force_reprovision=1
 #   terraform apply

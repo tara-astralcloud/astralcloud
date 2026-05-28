@@ -15,8 +15,14 @@ tara-astralcloud/
 │   ├── file-storage/    # Go service
 │   └── media-streaming/ # Go service
 ├── infra/
-│   ├── terraform/       # Cluster provisioning
-│   └── helm/            # Helm charts for core platform services
+│   ├── terraform/       # Cluster provisioning (k3s + platform services)
+│   │   └── modules/
+│   │       ├── k3s-node/   # SSH-based k3s server/agent install
+│   │       └── platform/   # MetalLB, ingress-nginx, Keycloak via Helm
+│   └── helm/            # Helm values files (no Chart.yaml — upstream charts only)
+│       ├── metallb/
+│       ├── ingress-nginx/
+│       └── keycloak/
 └── docs/
 ```
 
@@ -73,13 +79,37 @@ go vet ./...                     # Lint
 ### Infrastructure (`infra/`)
 
 ```bash
+# Full cluster + platform provisioning (single command):
+cd infra/terraform
+export TF_VAR_ssh_password='...'
+export TF_VAR_server_node_ip='192.168.0.x'
+export TF_VAR_keycloak_admin_password='...'
 terraform init
-terraform plan
 terraform apply
 
-helm install astralcloud ./infra/helm/platform -n astralcloud
-helm upgrade astralcloud ./infra/helm/platform -n astralcloud
+# Re-run helm installs after a values change:
+export TF_VAR_platform_force_reprovision=1
+terraform apply
+
+# Verify cluster after apply:
+kubectl get nodes
+kubectl get pods -n metallb-system
+kubectl get pods -n ingress-nginx
+kubectl get pods -n keycloak
+helm list -A
 ```
+
+**Installed platform services (via `module.platform`):**
+
+| Service       | Namespace      | Chart version  | Purpose                            |
+| ------------- | -------------- | -------------- | ---------------------------------- |
+| MetalLB       | metallb-system | 0.14.9         | L2 LoadBalancer for home network   |
+| ingress-nginx | ingress-nginx  | 4.10.1         | Reverse proxy / ingress controller |
+| Keycloak      | keycloak       | bitnami/24.4.1 | SSO/OIDC auth for all services     |
+
+MetalLB IP pool: `192.168.0.200–192.168.0.220`
+ingress-nginx external IP: `192.168.0.200`
+Keycloak: `http://keycloak.astralcloud.local/auth/admin` (add IP to `/etc/hosts`)
 
 ## App Integration Contract
 
@@ -131,6 +161,8 @@ When Claude makes a mistake, it must add a note here under the relevant section 
 - **`ssh_private_key_path` marked sensitive — What went wrong:** A file path is not a secret; marking it `sensitive = true` redacts it from plan output and makes debugging harder. **Fix:** Only mark the actual credential value sensitive, not the path to it.
 - **Open-ended `required_version` — What went wrong:** Used `>= 1.6.0` for `required_version`, allowing any future major version. **Fix:** Use `~> 1.6` to constrain to the 1.x series.
 - **Hardcoded IPs in module call — What went wrong:** Module call used literal IP strings instead of variables, embedding infrastructure config in code. **Fix:** Always pass `var.<name>` to module arguments; declare the variable in `variables.tf`.
+- **`sudo -n true` passes but `sudo cat` fails — What went wrong:** `sudo -n true` appeared to confirm NOPASSWD but it was a cached sudo timestamp from a prior interactive session. `sudo cat` on a root-only file then failed with "a terminal is required". **Fix:** Never assume NOPASSWD from `sudo -n true`. For non-interactive SSH commands that need sudo, pipe the password explicitly: `echo 'password' | sudo -S <cmd>`. Verify actual sudoers rules with `echo 'password' | sudo -S -l`.
+- **`data.external` trigger on sensitive var leaks to state — What went wrong:** Putting `var.keycloak_admin_password` in a `null_resource` trigger would store the password as plaintext in `terraform.tfstate`. **Fix:** Never use sensitive variables as trigger values. Use a non-secret `force_reprovision` string variable as the trigger instead. Pass secrets only via `local-exec` `environment {}` block.
 
 ### k3s / Helm
 
@@ -140,6 +172,9 @@ When Claude makes a mistake, it must add a note here under the relevant section 
 - **Helm repo not added before install — What went wrong:** `helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx` and MetalLB install commands omitted the `helm repo add` step, causing "repo not found" errors. **Fix:** Always show `helm repo add <name> <url> && helm repo update` before the first `helm install` from any repo.
 - **Longhorn on Pi missing `open-iscsi` — What went wrong:** Longhorn install instructions omitted the required `open-iscsi` package that must be installed on every Pi node. Without it, volume attachments silently fail. **Fix:** Always include `sudo apt-get install -y open-iscsi && sudo systemctl enable --now iscsid` before the Longhorn Helm install.
 - **`--version` omitted from Helm install commands — What went wrong:** MetalLB and Longhorn `helm upgrade --install` commands had no `--version` flag, violating the pinning rule. **Fix:** Always include an explicit `--version` flag on every `helm upgrade --install` command.
+- **Bitnami images completely removed from Docker Hub — What went wrong:** All `docker.io/bitnami/*` images are gone from Docker Hub (not just old tags). `bitnami/keycloak` and `bitnami/postgresql` charts fail with `ImagePullBackOff` on any version. **Fix:** Do NOT use `bitnami/keycloak` chart. Use `codecentric/keycloakx` (repo: `https://codecentric.github.io/helm-charts`) which uses `quay.io/keycloak/keycloak`. For PostgreSQL, use a StatefulSet with `postgres:16-alpine` (official Docker Hub library image — still accessible).
+- **`codecentric/keycloakx` chart sets proxy/http env vars automatically — What went wrong:** Adding `KC_PROXY_HEADERS` and `KC_HTTP_ENABLED` to `extraEnv` causes "duplicate entries" error because the chart already sets these from `proxy.enabled` and `proxy.http.enabled` values. **Fix:** Use the chart's native `proxy:` section in values.yaml instead of adding those env vars to `extraEnv`.
+- **`null_resource` with `kubectl rollout status` fails if pod can't start — What went wrong:** The Terraform keycloak resource runs `kubectl rollout status statefulset/keycloak-postgres --timeout=3m` but if the postgres pod has a `CreateContainerConfigError` (e.g., missing secret), the rollout times out and the null_resource is tainted. **Fix:** Ensure the secret is created before `kubectl apply -f postgres.yaml`, and verify the manifest's secretRef names match exactly what the secret creation step produces. Run `kubectl describe pod` to diagnose `CreateContainerConfigError` before re-applying.
 - **Flannel does not enforce NetworkPolicy — What went wrong:** Recommended `NetworkPolicy` as a security measure without noting that k3s's default Flannel CNI does not enforce it — policies are silently ignored. **Fix:** Always note this caveat; recommend switching to Calico or Cilium if NetworkPolicy is required.
 - **`kubectl top` requires metrics-server — What went wrong:** Listed `kubectl top nodes/pods` as a Day-2 command without noting it requires metrics-server, which k3s does not install by default. **Fix:** Always note the metrics-server prerequisite alongside `kubectl top` commands.
 

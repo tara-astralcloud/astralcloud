@@ -1,0 +1,105 @@
+# Keycloak codecentric/keycloakx 7.2.0 (Keycloak 26.6.2) — single replica, ARM64
+# Uses quay.io/keycloak/keycloak — not Bitnami (Docker Hub images unavailable)
+# PostgreSQL deployed separately via infra/helm/keycloak/postgres.yaml
+#
+# All secrets (admin + db password) come from the keycloak-secret k8s Secret,
+# created at deploy time from TF_VAR_keycloak_admin_password. Never in this file.
+
+replicas: 1
+
+image:
+  repository: quay.io/keycloak/keycloak
+  tag: "26.6.2"
+  pullPolicy: IfNotPresent
+
+# Proxy config — chart sets KC_PROXY_HEADERS and KC_HTTP_ENABLED from these
+proxy:
+  enabled: true
+  mode: forwarded
+  http:
+    enabled: true
+
+# DB and auth env vars; secret values come from keycloak-secret k8s Secret
+extraEnv: |
+  - name: KEYCLOAK_ADMIN
+    value: admin
+  - name: KEYCLOAK_ADMIN_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-secret
+        key: password
+  - name: KC_DB
+    value: postgres
+  - name: KC_DB_URL
+    value: jdbc:postgresql://keycloak-postgres:5432/keycloak
+  - name: KC_DB_USERNAME
+    value: keycloak
+  - name: KC_DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-secret
+        key: password
+  - name: KC_HOSTNAME_STRICT
+    value: "false"
+
+args:
+  - "start"
+  - "--cache=local"
+
+# Ingress via ingress-nginx
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+  rules:
+    - host: "keycloak.astralcloud.local"
+      paths:
+        - path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/'
+          pathType: Prefix
+
+http:
+  relativePath: "/auth"
+
+service:
+  type: ClusterIP
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 768Mi
+
+# Extended startup — Pi JVM startup is slow
+startupProbe: |
+  httpGet:
+    path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/health'
+    port: '{{ .Values.http.internalPort }}'
+    scheme: '{{ .Values.http.internalScheme }}'
+  initialDelaySeconds: 60
+  timeoutSeconds: 5
+  failureThreshold: 60
+  periodSeconds: 10
+
+livenessProbe: |
+  httpGet:
+    path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/health/live'
+    port: '{{ .Values.http.internalPort }}'
+    scheme: '{{ .Values.http.internalScheme }}'
+  initialDelaySeconds: 30
+  timeoutSeconds: 5
+  periodSeconds: 15
+
+readinessProbe: |
+  httpGet:
+    path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/health/ready'
+    port: '{{ .Values.http.internalPort }}'
+    scheme: '{{ .Values.http.internalScheme }}'
+  initialDelaySeconds: 30
+  timeoutSeconds: 3
+  periodSeconds: 10
+
+# Pod anti-affinity not needed on single node — disable default affinity
+affinity: ""

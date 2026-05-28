@@ -1,0 +1,22 @@
+# MetalLB 0.14.9 — L2 mode only (FRR/BGP disabled)
+# Official images are multi-arch (linux/arm64 included) — no arch override needed.
+
+controller:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+speaker:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  frr:
+    enabled: false

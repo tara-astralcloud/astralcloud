@@ -59,10 +59,11 @@ data "external" "node_token" {
 
   depends_on = [null_resource.k3s_server]
 
-  # sudo cat needed — node-token is root-only; pi has passwordless sudo
+  # sudo -S reads the password from stdin; pipe it so sudo doesn't need a TTY.
+  # pi has no NOPASSWD rules — password must be supplied explicitly.
   program = [
     "bash", "-c",
-    "SSHPASS='${var.ssh_password}' sshpass -e ssh -o StrictHostKeyChecking=accept-new -o BatchMode=no '${var.ssh_user}@${var.node_ip}' 'python3 -c \"import json,subprocess; print(json.dumps({\\\"token\\\": subprocess.check_output([\\\"sudo\\\",\\\"cat\\\",\\\"/var/lib/rancher/k3s/server/node-token\\\"]).decode().strip()}))\"'"
+    "SSHPASS='${var.ssh_password}' sshpass -e ssh -o StrictHostKeyChecking=accept-new -o BatchMode=no '${var.ssh_user}@${var.node_ip}' \"echo '${var.ssh_password}' | sudo -S python3 -c 'import json,pathlib; print(json.dumps({\\\"token\\\": pathlib.Path(\\\"/var/lib/rancher/k3s/server/node-token\\\").read_text().strip()}))' 2>/dev/null\""
   ]
 }
 
