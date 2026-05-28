@@ -9,3 +9,13 @@ terraform.tfstate.backup
 !terraform.tfvars.example
 tfplan
 crash.log
+.env.local
+
+# Next.js
+dashboard/.next/
+dashboard/node_modules/
+dashboard/next-env.d.ts
+dashboard/package-lock.json
+
+# Playwright MCP
+.playwright-mcp/

@@ -12,3 +12,8 @@ output "keycloak_installed" {
   description = "Keycloak release installed"
   value       = "keycloak codecentric/keycloakx 7.2.0 in keycloak"
 }
+
+output "dashboard_installed" {
+  description = "Dashboard release installed"
+  value       = "dashboard local chart 0.2.0 in astralcloud"
+}

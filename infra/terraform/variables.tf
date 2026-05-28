@@ -64,3 +64,15 @@ variable "platform_force_reprovision" {
   type        = string
   default     = "0"
 }
+
+variable "dashboard_client_secret" {
+  description = "Keycloak OIDC client secret for the dashboard — pass via TF_VAR_dashboard_client_secret, never in .tfvars"
+  type        = string
+  sensitive   = true
+}
+
+variable "dashboard_auth_secret" {
+  description = "Auth.js secret for JWT signing — pass via TF_VAR_dashboard_auth_secret, never in .tfvars"
+  type        = string
+  sensitive   = true
+}

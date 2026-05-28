@@ -1,0 +1,3 @@
+# Helm templates use Go templating syntax ({{ }}) that Prettier misparses
+infra/helm/**/templates/
+infra/helm/**/*.tpl
